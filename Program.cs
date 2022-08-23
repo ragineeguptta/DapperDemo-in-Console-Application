@@ -4,26 +4,41 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace DapperDemo
 {
     class Program
     {
-        static void Main(string[] args)
+        //static void Main(string[] args)
+        //{
+        //    //GetDynamicAuthors(1, 3);
+        //    //InsertSingleAuthorUsingDynamicParameters();
+        //    //GetAuthorAndTheirBooksSPUsingDynamicParameters(1);
+        //    //GetAuthorAndTheirBooksSPUsingDynamicParameters(2);
+        //    //DeleteMultipleAuthors();
+        //    //GetAllBooks();
+        //    //GetAllAuthors();
+
+        //    //in oprator
+        //    //GetAuthors(1, 3);
+
+        //}
+
+
+        //for async method
+        static async Task Main(string[] args)
         {
-            //GetDynamicAuthors(1, 3);
-            //InsertSingleAuthorUsingDynamicParameters();
-            //GetAuthorAndTheirBooksSPUsingDynamicParameters(1);
-            //GetAuthorAndTheirBooksSPUsingDynamicParameters(2);
-            //DeleteMultipleAuthors();
-            //GetAllBooks();
-            //GetAllAuthors();
+            //InsertSingleAuthorAsync();
+            var authors = await GetAllAuthorsAsync();
 
-            //in oprator
-            //GetAuthors(1, 3);
-
-            GetAuthorWithBooks();
+            foreach (var author in authors)
+            {
+                Console.WriteLine(author.FName + " " + author.LastName);
+            }
         }
+
+
 
 
         /// <summary>
@@ -368,6 +383,42 @@ namespace DapperDemo
                         Console.WriteLine("\t Title: {0} \t  Category: {1}", book.Title, book.Category);
                     }
                 }
+            }
+        }
+
+
+        /// <summary>
+        /// Async Operations
+        /// </summary>
+        /// <returns></returns>
+        private async static Task<List<Author>> GetAllAuthorsAsync()
+        {
+            var ConnectionString = @"Data Source=.;Initial Catalog=BookStoreContext;Integrated Security=True;";
+            using (IDbConnection db = new SqlConnection(ConnectionString))
+            {
+                IEnumerable<Author> results = await db.QueryAsync<Author>("SELECT Id, FirstName FName,  LastName FROM Authors");
+                return results.ToList();
+            }
+        }
+
+
+        /// <summary>
+        /// inserts a single author asynchronously using ExecuteAsync
+        /// </summary>
+        private static async void InsertSingleAuthorAsync()
+        {
+            var ConnectionString = @"Data Source=.;Initial Catalog=BookStoreContext;Integrated Security=True;";
+            using (IDbConnection db = new SqlConnection(ConnectionString))
+            {
+                Author author = new Author()
+                {
+                    FName = "Gunjan",
+                    LastName = "Shakespeare"
+                };
+
+                string sqlQuery = "INSERT INTO Authors (FirstName, LastName) VALUES(@FName, @LastName)";
+
+                int rowsAffected = await db.ExecuteAsync(sqlQuery, author);
             }
         }
 
