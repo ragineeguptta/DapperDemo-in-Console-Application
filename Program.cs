@@ -11,7 +11,7 @@ namespace DapperDemo
     {
         static void Main(string[] args)
         {
-            GetDynamicAuthors(1, 3);
+            //GetDynamicAuthors(1, 3);
             //InsertSingleAuthorUsingDynamicParameters();
             //GetAuthorAndTheirBooksSPUsingDynamicParameters(1);
             //GetAuthorAndTheirBooksSPUsingDynamicParameters(2);
@@ -21,6 +21,8 @@ namespace DapperDemo
 
             //in oprator
             //GetAuthors(1, 3);
+
+            GetAuthorWithBooks();
         }
 
 
@@ -321,6 +323,50 @@ namespace DapperDemo
                 foreach (var author in authors)
                 {
                     Console.WriteLine(author.FirstName + " " + author.LastName);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Multi Mapping
+        /// </summary>
+        private static void GetAuthorWithBooks()
+        {
+            string sql = "SELECT * FROM Authors A INNER JOIN Books B ON A.Id = B.AuthorId";
+
+            var ConnectionString = @"Data Source=.;Initial Catalog=BookStoreContext;Integrated Security=True;";
+            using (IDbConnection db = new SqlConnection(ConnectionString))
+            {
+                var authorDictionary = new Dictionary<int, Author>();
+
+                var authors = db.Query<Author, Book, Author>(
+                    sql,
+                    (author, book) =>
+                    {
+                        Author authorEntry;
+
+                        if (!authorDictionary.TryGetValue(author.Id, out authorEntry))
+                        {
+                            authorEntry = author;
+                            authorEntry.Books = new List<Book>();
+                            authorDictionary.Add(authorEntry.Id, authorEntry);
+                        }
+
+                        authorEntry.Books.Add(book);
+                        return authorEntry;
+                    },
+                    splitOn: "Id")
+                .Distinct()
+                .ToList();
+
+                foreach (var author in authors)
+                {
+                    Console.WriteLine(author.FName + " " + author.LastName);
+
+                    foreach (var book in author.Books)
+                    {
+                        Console.WriteLine("\t Title: {0} \t  Category: {1}", book.Title, book.Category);
+                    }
                 }
             }
         }
