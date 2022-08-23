@@ -11,12 +11,15 @@ namespace DapperDemo
     {
         static void Main(string[] args)
         {
-            InsertSingleAuthorUsingDynamicParameters();
+            //InsertSingleAuthorUsingDynamicParameters();
             //GetAuthorAndTheirBooksSPUsingDynamicParameters(1);
             //GetAuthorAndTheirBooksSPUsingDynamicParameters(2);
             //DeleteMultipleAuthors();
             //GetAllBooks();
             //GetAllAuthors();
+
+            //in oprator
+            GetAuthors(1, 3);
         }
 
 
@@ -278,6 +281,26 @@ namespace DapperDemo
                 string sqlQuery = "INSERT INTO Authors (FirstName, LastName) VALUES(@FirstName, @LastName)";
 
                 int rowsAffected = db.Execute(sqlQuery, parameter);
+            }
+        }
+
+        /// <summary>
+        /// IN Operator Support
+        /// </summary>
+        /// <param name="ids"></param>
+        private static void GetAuthors(params int[] ids)
+        {
+            var ConnectionString = @"Data Source=.;Initial Catalog=BookStoreContext;Integrated Security=True;";
+            using (IDbConnection db = new SqlConnection(ConnectionString))
+            {
+                List<Author> authors =
+                    db.Query<Author>("SELECT Id, FirstName FName,  LastName FROM Authors WHERE Id IN @Ids", new { Ids = ids })
+                    .ToList();
+
+                foreach (var author in authors)
+                {
+                    Console.WriteLine(author.FName + " " + author.LastName);
+                }
             }
         }
 
