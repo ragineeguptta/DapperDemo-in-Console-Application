@@ -11,8 +11,9 @@ namespace DapperDemo
     {
         static void Main(string[] args)
         {
-            GetAuthorAndThierBooksSP(1);
-            GetAuthorAndThierBooksSP(2);
+            InsertSingleAuthorUsingDynamicParameters();
+            //GetAuthorAndTheirBooksSPUsingDynamicParameters(1);
+            //GetAuthorAndTheirBooksSPUsingDynamicParameters(2);
             //DeleteMultipleAuthors();
             //GetAllBooks();
             //GetAllAuthors();
@@ -224,6 +225,59 @@ namespace DapperDemo
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Get Author And Their Books SP Using Dynamic Parameters
+        /// </summary>
+        /// <param name="id"></param>
+        private static void GetAuthorAndTheirBooksSPUsingDynamicParameters(int id)
+        {
+            string sql = "GetAuthor";
+
+            DynamicParameters parameter = new DynamicParameters();
+            parameter.Add("@Id", id);
+
+            var ConnectionString = @"Data Source=.;Initial Catalog=BookStoreContext;Integrated Security=True;";
+            using (IDbConnection db = new SqlConnection(ConnectionString))
+            {
+                using (var results = db.QueryMultiple(sql, parameter, commandType: CommandType.StoredProcedure))
+                {
+                    var author = results.Read<Author>().SingleOrDefault();
+                    var books = results.Read<Book>().ToList();
+
+                    if (author != null && books != null)
+                    {
+                        author.Books = books;
+
+                        Console.WriteLine(author.FName + " " + author.LastName);
+
+                        foreach (var book in author.Books)
+                        {
+                            Console.WriteLine("\t Title: {0} \t  Category: {1}", book.Title, book.Category);
+                        }
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// inserts an author into the database using dynamic parameters
+        /// </summary>
+        private static void InsertSingleAuthorUsingDynamicParameters()
+        {
+            var ConnectionString = @"Data Source=.;Initial Catalog=BookStoreContext;Integrated Security=True;";
+            using (IDbConnection db = new SqlConnection(ConnectionString))
+            {
+                DynamicParameters parameter = new DynamicParameters();
+
+                parameter.Add("@FirstName", "Raginee");
+                parameter.Add("@LastName", "Gupta");
+
+                string sqlQuery = "INSERT INTO Authors (FirstName, LastName) VALUES(@FirstName, @LastName)";
+
+                int rowsAffected = db.Execute(sqlQuery, parameter);
             }
         }
 
