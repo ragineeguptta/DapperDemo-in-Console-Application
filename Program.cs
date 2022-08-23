@@ -11,6 +11,7 @@ namespace DapperDemo
     {
         static void Main(string[] args)
         {
+            GetDynamicAuthors(1, 3);
             //InsertSingleAuthorUsingDynamicParameters();
             //GetAuthorAndTheirBooksSPUsingDynamicParameters(1);
             //GetAuthorAndTheirBooksSPUsingDynamicParameters(2);
@@ -19,7 +20,7 @@ namespace DapperDemo
             //GetAllAuthors();
 
             //in oprator
-            GetAuthors(1, 3);
+            //GetAuthors(1, 3);
         }
 
 
@@ -300,6 +301,26 @@ namespace DapperDemo
                 foreach (var author in authors)
                 {
                     Console.WriteLine(author.FName + " " + author.LastName);
+                }
+            }
+        }
+
+        /// <summary>
+        /// same functionality using dynamic objects instead of using the concrete Author class
+        /// </summary>
+        /// <param name="ids"></param>
+        private static void GetDynamicAuthors(params int[] ids)
+        {
+            var ConnectionString = @"Data Source=.;Initial Catalog=BookStoreContext;Integrated Security=True;";
+            using (IDbConnection db = new SqlConnection(ConnectionString))
+            {
+                List<dynamic> authors =
+                    db.Query("SELECT * FROM Authors WHERE Id IN @Ids", new { Ids = ids })
+                    .ToList();
+
+                foreach (var author in authors)
+                {
+                    Console.WriteLine(author.FirstName + " " + author.LastName);
                 }
             }
         }
