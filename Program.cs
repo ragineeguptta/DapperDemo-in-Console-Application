@@ -11,9 +11,11 @@ namespace DapperDemo
     {
         static void Main(string[] args)
         {
-            DeleteMultipleAuthors();
-            GetAllBooks();
-            GetAllAuthors();
+            GetAuthorAndTheirBooks(1);
+            GetAuthorAndTheirBooks(2);
+            //DeleteMultipleAuthors();
+            //GetAllBooks();
+            //GetAllAuthors();
         }
 
 
@@ -159,6 +161,35 @@ namespace DapperDemo
                     }
                     );
             }
+        }
+
+        private static void GetAuthorAndTheirBooks(int id)
+        {
+            string sql = "SELECT Id, FirstName FName,  LastName FROM Authors WHERE Id = @Id;" + "SELECT * FROM Books WHERE AuthorId = @Id;";
+
+            var ConnectionString = @"Data Source=.;Initial Catalog=BookStoreContext;Integrated Security=True;";
+            using (IDbConnection db = new SqlConnection(ConnectionString))
+            {
+                using (var results = db.QueryMultiple(sql, new {Id = id }))
+                {
+                    var author = results.Read<Author>().SingleOrDefault();
+                    var books = results.Read<Book>().ToList();
+
+                    if (author != null && books != null)
+                    {
+                        author.Books = books;
+
+                        Console.WriteLine(author.FName + " " + author.LastName);
+
+                        foreach(var book in author.Books)
+                        {
+                            Console.WriteLine("\t Title: {0} \t Category: {1}", book.Title, book.Category);
+                        }
+                    }
+
+                }
+            }
+
         }
 
     }
